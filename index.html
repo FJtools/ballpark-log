@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -322,6 +323,8 @@ function BaseballTracker() {
     drillLog: {}, summary: "", details: "", feeling: 3, tags: "",
   };
   const [form, setForm] = useState(emptyForm);
+  const [editingEntryId, setEditingEntryId] = useState(null);
+  const [inputReturnView, setInputReturnView] = useState("dashboard");
 
   const emptyGame = {
     date: new Date().toISOString().slice(0, 10),
@@ -396,6 +399,31 @@ function BaseballTracker() {
       return { ...f, drillLog: dl };
     });
   }
+  function entryToForm(e) {
+    return {
+      date: e.date,
+      condition: e.condition ?? 3,
+      weight: e.weight ?? "",
+      totalMinutes: e.totalMinutes ?? "",
+      sleepHours: e.sleepHours ?? "",
+      pitchSpeed: e.pitchSpeed ?? "",
+      swingSpeed: e.swingSpeed ?? "",
+      sprintTime: e.sprintTime ?? "",
+      drillLog: e.drillLog || {},
+      summary: e.summary || "",
+      details: e.details || "",
+      feeling: e.feeling ?? 3,
+      tags: (e.tags || []).join(" "),
+    };
+  }
+
+  function startEditEntry(entry, returnTo = "log") {
+    setInputReturnView(returnTo);
+    setEditingEntryId(entry.id);
+    setForm(entryToForm(entry));
+    setView("input");
+  }
+
   function toggleDrill(cat, drill) {
     setForm(f => {
       const dl = { ...f.drillLog };
@@ -420,8 +448,11 @@ function BaseballTracker() {
       Object.entries(drills).forEach(([d, m]) => { if (m !== "") c[d] = Number(m) || 0; });
       if (Object.keys(c).length) cleanLog[cat] = c;
     });
+    const existingForDate = entries.find(e => e.date === form.date);
+    const idToUse = editingEntryId ?? existingForDate?.id ?? Date.now();
+
     const entry = {
-      id: Date.now(), date: form.date,
+      id: idToUse, date: form.date,
       condition: Number(form.condition),
       weight: form.weight !== "" ? Number(form.weight) : null,
       totalMinutes: form.totalMinutes !== "" ? Number(form.totalMinutes) : null,
@@ -433,9 +464,15 @@ function BaseballTracker() {
       feeling: Number(form.feeling),
       tags: form.tags ? form.tags.split(/[,、\s]+/).filter(Boolean) : [],
     };
-    setEntries(prev => [entry, ...prev]);
+    setEntries(prev => {
+      const exists = prev.some(e => e.id === idToUse);
+      const next = exists ? prev.map(e => e.id === idToUse ? entry : e) : [entry, ...prev];
+      return [...next].sort((a,b) => b.date.localeCompare(a.date));
+    });
+    if (selectedEntry?.id === idToUse) setSelectedEntry(entry);
     await supabase.from('practice_entries').upsert(entryToDB(entry));
     setForm(emptyForm);
+    setEditingEntryId(null);
     setView("log");
   }
 
@@ -563,7 +600,7 @@ function BaseballTracker() {
           ))}
         </div>
         <div style={{ display:"flex", gap:6, marginLeft:8 }}>
-          <button style={S.addBtn} onClick={() => { setForm(emptyForm); setView("input"); }}>＋P</button>
+          <button style={S.addBtn} onClick={() => { setInputReturnView(view); setEditingEntryId(null); setForm(emptyForm); setView("input"); }}>＋P</button>
           <button style={{ ...S.addBtn, background:"linear-gradient(135deg,#f59e0b,#ef4444)", boxShadow:"0 0 18px rgba(245,158,11,0.3)" }}
             onClick={() => { setGameForm(emptyGame); setActiveTab("batting"); setView("game_input"); }}>＋G</button>
         </div>
@@ -1068,6 +1105,15 @@ function BaseballTracker() {
                       </div>
                     )}
                     <div style={{ display: "flex", flexWrap: "wrap" }}>{entry.tags.map(t => <TagChip key={t} tag={t} />)}</div>
+                    <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      <button onClick={(e) => { e.stopPropagation(); startEditEntry(entry, "log"); }} style={{
+                        padding: "8px 14px", borderRadius: 10,
+                        border: "1px solid rgba(6,182,212,0.35)",
+                        background: "rgba(6,182,212,0.12)",
+                        color: "#06b6d4", fontSize: 13, cursor: "pointer",
+                        fontFamily: "'Noto Sans JP', sans-serif", fontWeight: 700,
+                      }}>この記録を編集</button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1216,8 +1262,8 @@ function BaseballTracker() {
         {view === "input" && (
           <div>
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, letterSpacing: 1, lineHeight:1 }}>P — NEW RECORD</div>
-              <div style={{ fontSize:11, color:"#475569", marginTop:4 }}>練習記録の入力フォーム</div>
+              <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, letterSpacing: 1, lineHeight:1 }}>P — {editingEntryId ? "EDIT RECORD" : "NEW RECORD"}</div>
+              <div style={{ fontSize:11, color:"#475569", marginTop:4 }}>{editingEntryId ? "練習記録の編集フォーム" : "練習記録の入力フォーム"}</div>
             </div>
             <div style={S.card}>
 
@@ -1451,8 +1497,8 @@ function BaseballTracker() {
                   background: "linear-gradient(135deg, #06b6d4, #3b82f6)",
                   color: "#fff", fontSize: 15, fontFamily: "'Noto Sans JP', sans-serif",
                   fontWeight: 700, cursor: "pointer", boxShadow: "0 0 22px rgba(6,182,212,0.28)",
-                }}>記録を保存する</button>
-                <button onClick={() => setView("dashboard")} style={{
+                }}>{editingEntryId ? "記録を更新する" : "記録を保存する"}</button>
+                <button onClick={() => { setForm(emptyForm); setEditingEntryId(null); setView(inputReturnView); }} style={{
                   padding: "14px 20px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)",
                   background: "transparent", color: "#64748b", fontSize: 15,
                   fontFamily: "'Noto Sans JP', sans-serif", cursor: "pointer",
