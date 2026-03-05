@@ -39,47 +39,85 @@
 <div id="root"></div>
 <script type="text/babel">
 const { useState, useEffect } = React;
+
 // ── Supabase client ───────────────────────────────────────────
 const supabase = window.supabase.createClient(
   "https://njtqsbsmmpwyllqxocbj.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qdHFzYnNtbXB3eWxscXhvY2JqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Nzc2MzcsImV4cCI6MjA4ODI1MzYzN30.kID3s7ZnOUefKMDLj9fcaLIlaHUNbsG6UbMwE_HsTYI"
 );
+
 // ── DB ↔ App data converters ──────────────────────────────────
 function entryToDB(e) {
   return {
-    id: e.id, date: e.date, condition: e.condition, weight: e.weight,
-    total_minutes: e.totalMinutes, sleep_hours: e.sleepHours,
-    pitch_speed: e.pitchSpeed, swing_speed: e.swingSpeed, sprint_time: e.sprintTime,
-    drill_log: e.drillLog, summary: e.summary, details: e.details,
-    feeling: e.feeling, tags: e.tags,
+    id: e.id,
+    date: e.date,
+    condition: e.condition,
+    weight: e.weight,
+    total_minutes: e.totalMinutes,
+    sleep_hours: e.sleepHours,
+    pitch_speed: e.pitchSpeed,
+    swing_speed: e.swingSpeed,
+    sprint_time: e.sprintTime,
+    drill_log: e.drillLog,
+    summary: e.summary,
+    details: e.details,
+    feeling: e.feeling,
+    tags: e.tags,
   };
 }
 function dbToEntry(r) {
   return {
-    id: r.id, date: r.date, condition: r.condition, weight: r.weight,
-    totalMinutes: r.total_minutes, sleepHours: r.sleep_hours,
-    pitchSpeed: r.pitch_speed, swingSpeed: r.swing_speed, sprintTime: r.sprint_time,
-    drillLog: r.drill_log || {}, summary: r.summary || '', details: r.details || '',
-    feeling: r.feeling, tags: r.tags || [],
+    id: r.id,
+    date: r.date,
+    condition: r.condition,
+    weight: r.weight,
+    totalMinutes: r.total_minutes,
+    sleepHours: r.sleep_hours,
+    pitchSpeed: r.pitch_speed,
+    swingSpeed: r.swing_speed,
+    sprintTime: r.sprint_time,
+    drillLog: r.drill_log || {},
+    summary: r.summary || '',
+    details: r.details || '',
+    feeling: r.feeling,
+    tags: r.tags || [],
   };
 }
 function gameToDB(g) {
   return {
-    id: g.id, date: g.date, opponent: g.opponent, venue: g.venue,
-    result: g.result, score: g.score, batting: g.batting,
-    pitching: g.pitching, baserunning: g.baserunning, memo: g.memo,
+    id: g.id,
+    date: g.date,
+    opponent: g.opponent,
+    venue: g.venue,
+    result: g.result,
+    score: g.score,
+    batting: g.batting,
+    pitching: g.pitching,
+    baserunning: g.baserunning,
+    memo: g.memo,
   };
 }
 function dbToGame(r) {
   return {
-    id: r.id, date: r.date, opponent: r.opponent, venue: r.venue,
-    result: r.result, score: r.score || {}, batting: r.batting || {},
-    pitching: r.pitching || {}, baserunning: r.baserunning || {}, memo: r.memo || '',
+    id: r.id,
+    date: r.date,
+    opponent: r.opponent,
+    venue: r.venue,
+    result: r.result,
+    score: r.score || {},
+    batting: r.batting || {},
+    pitching: r.pitching || {},
+    baserunning: r.baserunning || {},
+    memo: r.memo || '',
   };
 }
+
+
+
 // ─── Master Data ───────────────────────────────────────────────
 const CONDITION_LABELS = ["最悪", "悪い", "普通", "良い", "最高"];
 const CONDITION_COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#10b981"];
+
 const CATEGORY_DRILLS = {
   "投球": ["キャッチボール","ネットスロー","ブルペン投球","遠投","フォーム/モーション","シャドーピッチング","その他"],
   "打撃": ["素振り","置きティ","投げティ","ロングティ","ハーフバッティング","フリー打撃","バント","その他"],
@@ -90,6 +128,7 @@ const CATEGORY_DRILLS = {
   "知識・メンタル": ["読書","情報インプット","試合映像分析","ルール学習","学校科目(宿題・塾)","英語","バイオメカニクス","栄養学","その他"],
 };
 const CATEGORIES = Object.keys(CATEGORY_DRILLS);
+
 const CAT_COLORS = {
   "投球":               "#06b6d4",
   "打撃":               "#f59e0b",
@@ -99,6 +138,7 @@ const CAT_COLORS = {
   "身体ケア":           "#14b8a6",
   "知識・メンタル":      "#ec4899",
 };
+
 // ─── Sample Data ───────────────────────────────────────────────
 const initialEntries = [
   {
@@ -149,6 +189,7 @@ const initialEntries = [
     feeling: 4, tags: ["走塁", "ヒットエンドラン"],
   },
 ];
+
 function formatDate(d) {
   const dt = new Date(d);
   return `${dt.getMonth() + 1}/${dt.getDate()}`;
@@ -158,6 +199,7 @@ function totalDrillMins(drillLog) {
     (s, drills) => s + Object.values(drills).reduce((a, v) => a + (Number(v) || 0), 0), 0
   );
 }
+
 // ─── Sub-components ────────────────────────────────────────────
 function ConditionDot({ value, size = 10 }) {
   return <span style={{
@@ -166,6 +208,7 @@ function ConditionDot({ value, size = 10 }) {
     boxShadow: `0 0 6px ${CONDITION_COLORS[value - 1]}`,
   }} />;
 }
+
 function TagChip({ tag }) {
   return <span style={{
     display: "inline-block", padding: "2px 10px", borderRadius: 20, fontSize: 11,
@@ -174,6 +217,7 @@ function TagChip({ tag }) {
     color: "#94a3b8", marginRight: 4, marginBottom: 4,
   }}>{tag}</span>;
 }
+
 function StatCard({ label, value, sub, accent }) {
   return (
     <div style={{
@@ -188,6 +232,7 @@ function StatCard({ label, value, sub, accent }) {
     </div>
   );
 }
+
 function DrillBreakdown({ drillLog }) {
   const segs = [];
   Object.entries(drillLog || {}).forEach(([cat, drills]) => {
@@ -216,6 +261,7 @@ function DrillBreakdown({ drillLog }) {
     </div>
   );
 }
+
 // ─── Game Sample Data ─────────────────────────────────────────
 const initialGames = [
   {
@@ -243,6 +289,7 @@ const initialGames = [
     memo: "完封勝利。全ての球種がはまった。打撃でも本塁打を記録。",
   },
 ];
+
 // ─── Main App ──────────────────────────────────────────────────
 function BaseballTracker() {
   const [view, setView] = useState("dashboard");
@@ -252,6 +299,7 @@ function BaseballTracker() {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [filterCat, setFilterCat] = useState(null);
+
   // ── Supabase load on mount ──
   useEffect(() => {
     async function loadData() {
@@ -267,12 +315,14 @@ function BaseballTracker() {
     }
     loadData();
   }, []);
+
   const emptyForm = {
     date: new Date().toISOString().slice(0, 10),
     condition: 3, weight: "", totalMinutes: "", sleepHours: "", pitchSpeed: "", swingSpeed: "", sprintTime: "",
     drillLog: {}, summary: "", details: "", feeling: 3, tags: "",
   };
   const [form, setForm] = useState(emptyForm);
+
   const emptyGame = {
     date: new Date().toISOString().slice(0, 10),
     opponent: "", venue: "", result: "win",
@@ -283,46 +333,62 @@ function BaseballTracker() {
     memo: "",
   };
   const [gameForm, setGameForm] = useState(emptyGame);
-  const [activeTab, setActiveTab] = useState("batting");
+  const [activeTab, setActiveTab] = useState("batting"); // batting | pitching | baserunning
+
   // ── Date helpers ──
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
-  const dayOfWeek = today.getDay();
+  const dayOfWeek = today.getDay(); // 0=Sun
   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const weekStart = new Date(today); weekStart.setDate(today.getDate() + mondayOffset);
   const weekStartStr = weekStart.toISOString().slice(0, 10);
-  const monthStr = todayStr.slice(0, 7);
+  const monthStr = todayStr.slice(0, 7); // "YYYY-MM"
+
   const thisWeekEntries  = entries.filter(e => e.date >= weekStartStr && e.date <= todayStr);
   const thisMonthEntries = entries.filter(e => e.date.startsWith(monthStr));
+
+  // 記録日数
   const weekDays  = thisWeekEntries.length;
   const monthDays = thisMonthEntries.length;
+
+  // コンディション
   const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
   const latestCond     = sorted.length     ? sorted[0].condition : null;
   const latestCondDate = sorted.length     ? sorted[0].date      : null;
   const prevCond       = sorted.length > 1 ? sorted[1].condition : null;
   const prevCondDate   = sorted.length > 1 ? sorted[1].date      : null;
   const condDiff       = latestCond != null && prevCond != null ? latestCond - prevCond : null;
+
+  // 練習時間
   const weekMins  = thisWeekEntries.reduce((s, e) => s + (Number(e.totalMinutes) || 0), 0);
   const monthMins = thisMonthEntries.reduce((s, e) => s + (Number(e.totalMinutes) || 0), 0);
+
+  // 体重
   const wSorted        = [...entries].filter(e => e.weight).sort((a, b) => b.date.localeCompare(a.date));
   const latestWeight     = wSorted.length     ? Number(wSorted[0].weight) : null;
   const latestWeightDate = wSorted.length     ? wSorted[0].date           : null;
   const prevWeight       = wSorted.length > 1 ? Number(wSorted[1].weight) : null;
   const prevWeightDate   = wSorted.length > 1 ? wSorted[1].date           : null;
   const weightDiff       = latestWeight != null && prevWeight != null ? (latestWeight - prevWeight).toFixed(1) : null;
+
+  // Performance records
   const pitchEntries  = [...entries].filter(e => e.pitchSpeed).sort((a,b) => b.date.localeCompare(a.date));
   const swingEntries  = [...entries].filter(e => e.swingSpeed).sort((a,b) => b.date.localeCompare(a.date));
   const sprintEntries = [...entries].filter(e => e.sprintTime).sort((a,b) => b.date.localeCompare(a.date));
+
   const latestPitch  = pitchEntries.length  ? { val: Number(pitchEntries[0].pitchSpeed),   date: pitchEntries[0].date  } : null;
   const latestSwing  = swingEntries.length  ? { val: Number(swingEntries[0].swingSpeed),   date: swingEntries[0].date  } : null;
   const latestSprint = sprintEntries.length ? { val: Number(sprintEntries[0].sprintTime),  date: sprintEntries[0].date } : null;
+
   const bestPitchRec  = pitchEntries.length  ? pitchEntries.reduce((b,e)  => Number(e.pitchSpeed)  > b.val ? {val:Number(e.pitchSpeed),  date:e.date} : b, {val:Number(pitchEntries[0].pitchSpeed),   date:pitchEntries[0].date})   : null;
   const bestSwingRec  = swingEntries.length  ? swingEntries.reduce((b,e)  => Number(e.swingSpeed)  > b.val ? {val:Number(e.swingSpeed),  date:e.date} : b, {val:Number(swingEntries[0].swingSpeed),   date:swingEntries[0].date})   : null;
   const bestSprintRec = sprintEntries.length ? sprintEntries.reduce((b,e) => Number(e.sprintTime)  < b.val ? {val:Number(e.sprintTime),  date:e.date} : b, {val:Number(sprintEntries[0].sprintTime),  date:sprintEntries[0].date})  : null;
+
   const recentTrend = [...entries].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8).reverse();
   const sortedEntries = [...entries]
     .filter(e => !filterCat || (e.drillLog && e.drillLog[filterCat]))
     .sort((a, b) => b.date.localeCompare(a.date));
+
   function toggleCategory(cat) {
     setForm(f => {
       const dl = { ...f.drillLog };
@@ -346,6 +412,7 @@ function BaseballTracker() {
       return { ...f, drillLog: dl };
     });
   }
+
   async function handleSubmit() {
     const cleanLog = {};
     Object.entries(form.drillLog).forEach(([cat, drills]) => {
@@ -371,6 +438,7 @@ function BaseballTracker() {
     setForm(emptyForm);
     setView("log");
   }
+
   const S = {
     root: {
       minHeight: "100vh", background: "#080c14", color: "#e2e8f0",
@@ -419,6 +487,7 @@ function BaseballTracker() {
       fontFamily: "'Noto Sans JP', sans-serif", width: "100%", boxSizing: "border-box", outline: "none",
     },
   };
+
   // Analysis helpers
   function getCatStats() {
     return CATEGORIES.map(cat => {
@@ -442,9 +511,11 @@ function BaseballTracker() {
     });
     return Object.values(map).sort((a, b) => b.totalMins - a.totalMins).slice(0, 10);
   }
+
   const wEntries = [...entries].filter(e => e.weight).sort((a, b) => a.date.localeCompare(b.date)).slice(-10);
   const minW = wEntries.length ? Math.min(...wEntries.map(e => e.weight)) - 0.5 : 60;
   const maxW = wEntries.length ? Math.max(...wEntries.map(e => e.weight)) + 0.5 : 80;
+
   async function handleGameSubmit() {
     const g = {
       id: Date.now(),
@@ -463,6 +534,7 @@ function BaseballTracker() {
     setGameForm(emptyGame);
     setView("game_log");
   }
+
   if (loading) return (
     <div className="loading-screen">
       <div className="spinner" />
@@ -470,9 +542,11 @@ function BaseballTracker() {
       <div style={{fontSize:11}}>データを読み込んでいます...</div>
     </div>
   );
+
   return (
     <div style={S.root}>
       <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+
       <header style={S.header}>
         <div style={S.logo}>⚾ BALLPARK LOG</div>
         <div style={{ display:"flex", alignItems:"center", gap:3 }}>
@@ -494,7 +568,9 @@ function BaseballTracker() {
             onClick={() => { setGameForm(emptyGame); setActiveTab("batting"); setView("game_input"); }}>＋G</button>
         </div>
       </header>
+
       <main style={S.main}>
+
         {/* ══ DASHBOARD ══ */}
         {view === "dashboard" && (
           <div>
@@ -509,6 +585,8 @@ function BaseballTracker() {
             </div>
             {/* ── KPI cards row 1 ── */}
             <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
+
+              {/* 記録日数 */}
               <div style={{ flex:1, minWidth:130, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"18px 20px", position:"relative", overflow:"hidden" }}>
                 <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:"linear-gradient(90deg,#06b6d4,#3b82f6)", borderRadius:"16px 16px 0 0" }} />
                 <div style={{ fontSize:11, color:"#64748b", fontFamily:"'Noto Sans JP', sans-serif", marginBottom:6 }}>記録日数 <span style={{fontSize:9,color:"#334155"}}>(week)</span></div>
@@ -517,8 +595,11 @@ function BaseballTracker() {
                 </div>
                 <div style={{ fontSize:10, color:"#475569", marginTop:5 }}>今月累計 {monthDays}日</div>
               </div>
+
+              {/* コンディション */}
               <div style={{ flex:1, minWidth:130, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"18px 20px", position:"relative", overflow:"hidden" }}>
                 <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:"linear-gradient(90deg,#22c55e,#10b981)", borderRadius:"16px 16px 0 0" }} />
+                {/* cond label with date */}
                 <div style={{ fontSize:11, color:"#64748b", fontFamily:"'Noto Sans JP', sans-serif", marginBottom:6 }}>コンディション {latestCondDate && <span style={{fontSize:9,color:"#334155"}}>({formatDate(latestCondDate)})</span>}</div>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                   {latestCond != null ? (
@@ -537,6 +618,8 @@ function BaseballTracker() {
                   })()}
                 </div>
               </div>
+
+              {/* 練習時間 */}
               <div style={{ flex:1, minWidth:130, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"18px 20px", position:"relative", overflow:"hidden" }}>
                 <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:"linear-gradient(90deg,#f59e0b,#f97316)", borderRadius:"16px 16px 0 0" }} />
                 <div style={{ fontSize:11, color:"#64748b", fontFamily:"'Noto Sans JP', sans-serif", marginBottom:6 }}>練習時間 <span style={{fontSize:9,color:"#334155"}}>(week)</span></div>
@@ -545,8 +628,11 @@ function BaseballTracker() {
                 </div>
                 <div style={{ fontSize:10, color:"#475569", marginTop:5 }}>今月累計 {monthMins}分</div>
               </div>
+
+              {/* 体重 */}
               <div style={{ flex:1, minWidth:130, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"18px 20px", position:"relative", overflow:"hidden" }}>
                 <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:"linear-gradient(90deg,#8b5cf6,#ec4899)", borderRadius:"16px 16px 0 0" }} />
+                {/* weight label with date */}
                 <div style={{ fontSize:11, color:"#64748b", fontFamily:"'Noto Sans JP', sans-serif", marginBottom:6 }}>体重 {latestWeightDate && <span style={{fontSize:9,color:"#334155"}}>({formatDate(latestWeightDate)})</span>}</div>
                 <div style={{ fontSize:28, fontFamily:"'Oswald', sans-serif", color:"#f1f5f9", lineHeight:1 }}>
                   {latestWeight ?? "—"}<span style={{ fontSize:14, color:"#64748b", marginLeft:3 }}>kg</span>
@@ -562,6 +648,7 @@ function BaseballTracker() {
                 </div>
               </div>
             </div>
+
             {/* ── Performance records row ── */}
             {(() => {
               const perfItems = [
@@ -586,6 +673,13 @@ function BaseballTracker() {
                   {perfItems.map(item => {
                     const isRecord = item.latest && item.best &&
                       (item.isMax ? item.latest.val >= item.best.val : item.latest.val <= item.best.val);
+                    const diff = item.latest && item.best
+                      ? (item.isMax
+                          ? (item.latest.val - item.best.val)
+                          : (item.best.val - item.latest.val))
+                      : null;
+                    // diff > 0 means latest is better than best (shouldn't happen unless same record)
+                    // diff < 0 means latest is below best
                     const diffFromBest = item.latest && item.best
                       ? (item.isMax
                           ? (item.latest.val - item.best.val)
@@ -600,7 +694,10 @@ function BaseballTracker() {
                         position:"relative", overflow:"hidden",
                       }}>
                         <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:item.accent, borderRadius:"16px 16px 0 0" }} />
+
                         <div style={{ fontSize:11, color:"#64748b", fontFamily:"'Noto Sans JP', sans-serif", marginBottom:10 }}>{item.label}</div>
+
+                        {/* Latest value — main */}
                         {item.latest ? (
                           <div style={{ marginBottom:10 }}>
                             <div style={{ display:"flex", alignItems:"baseline", gap:5 }}>
@@ -629,6 +726,8 @@ function BaseballTracker() {
                         ) : (
                           <div style={{ fontSize:26, fontFamily:"'Oswald', sans-serif", color:"#334155", marginBottom:10 }}>—</div>
                         )}
+
+                        {/* Divider */}
                         <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:8 }}>
                           <div style={{ fontSize:9, color:"#475569", marginBottom:3, letterSpacing:0.5, fontFamily:"'Oswald', sans-serif" }}>BEST</div>
                           {item.best ? (
@@ -647,6 +746,7 @@ function BaseballTracker() {
                 </div>
               );
             })()}
+
             {/* ══ 過去30日 統合チャート ══ */}
             {(() => {
               const today30 = new Date();
@@ -657,18 +757,26 @@ function BaseballTracker() {
               }
               const entryMap = {};
               entries.forEach(e => { entryMap[e.date] = e; });
+
               const maxPracMins = Math.max(...days30.map(d => {
                 const e = entryMap[d]; if (!e) return 0;
                 return e.totalMinutes ? Number(e.totalMinutes) : totalDrillMins(e.drillLog);
               }), 1);
+
               const PRAC_H = 130;
               const DOT_ROW_H = 22;
               const barW = 100 / 30;
+
+              // sleep → 5 levels: <5=1, <6=2, <7=3, <8=4, ≥8=5
               const sleepLevel = h => h >= 8 ? 5 : h >= 7 ? 4 : h >= 6 ? 3 : h >= 5 ? 2 : 1;
               const SLEEP_COLORS = ["#ef4444","#f97316","#eab308","#22c55e","#10b981"];
+
+              // date tick indices
               const tickIdx = new Set([0,6,13,20,27,29]);
+
               return (
                 <div style={S.card}>
+                  {/* header + legend */}
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14, flexWrap:"wrap", gap:8 }}>
                     <div style={S.secTitle}>過去30日間の練習推移</div>
                     <div style={{ display:"flex", flexWrap:"wrap", gap:"4px 10px" }}>
@@ -679,9 +787,12 @@ function BaseballTracker() {
                       ))}
                     </div>
                   </div>
+
+                  {/* ── Practice stacked bars (main, tall) ── */}
                   <div style={{ fontSize:9, color:"#475569", letterSpacing:1, marginBottom:3, fontFamily:"'Oswald', sans-serif" }}>PRACTICE TIME</div>
                   <div style={{ position:"relative", height: PRAC_H + 18, marginBottom:6 }}>
                     <svg width="100%" height={PRAC_H} style={{ display:"block", overflow:"visible" }}>
+                      {/* Y-axis guide lines */}
                       {[0.25,0.5,0.75,1].map(frac => (
                         <line key={frac}
                           x1="0" x2="100%" y1={PRAC_H - frac*PRAC_H} y2={PRAC_H - frac*PRAC_H}
@@ -718,6 +829,7 @@ function BaseballTracker() {
                                 </rect>
                               );
                             })}
+                            {/* total label on tall bars */}
                             {barH > 28 && (
                               <text x={`${i*barW+barW*0.5}%`} y={PRAC_H-barH-5}
                                 textAnchor="middle" fontSize="7.5" fill="rgba(255,255,255,0.5)" fontFamily="Oswald">{totalM}</text>
@@ -726,6 +838,7 @@ function BaseballTracker() {
                         );
                       })}
                     </svg>
+                    {/* date ticks */}
                     <div style={{display:"flex",position:"absolute",bottom:0,left:0,right:0}}>
                       {days30.map((d,i)=>(
                         <div key={d} style={{flex:1,textAlign:"center"}}>
@@ -738,7 +851,10 @@ function BaseballTracker() {
                       ))}
                     </div>
                   </div>
+
                   <div style={{borderTop:"1px solid rgba(255,255,255,0.05)",marginBottom:8}}/>
+
+                  {/* ── Condition dots row ── */}
                   <div style={{display:"flex",alignItems:"center",gap:0,marginBottom:2}}>
                     <div style={{fontSize:8,color:"#475569",letterSpacing:1,fontFamily:"'Oswald', sans-serif",width:60,flexShrink:0}}>CONDITION</div>
                     <div style={{display:"flex",flex:1,height:DOT_ROW_H,alignItems:"center"}}>
@@ -763,6 +879,8 @@ function BaseballTracker() {
                       })}
                     </div>
                   </div>
+
+                  {/* ── Sleep dots row ── */}
                   <div style={{display:"flex",alignItems:"center",gap:0,marginBottom:2}}>
                     <div style={{fontSize:8,color:"#475569",letterSpacing:1,fontFamily:"'Oswald', sans-serif",width:60,flexShrink:0}}>SLEEP</div>
                     <div style={{display:"flex",flex:1,height:DOT_ROW_H,alignItems:"center"}}>
@@ -788,6 +906,8 @@ function BaseballTracker() {
                       })}
                     </div>
                   </div>
+
+                  {/* ── Weight text row ── */}
                   <div style={{display:"flex",alignItems:"center",gap:0,marginBottom:4}}>
                     <div style={{fontSize:8,color:"#475569",letterSpacing:1,fontFamily:"'Oswald', sans-serif",width:60,flexShrink:0}}>WEIGHT</div>
                     <div style={{display:"flex",flex:1,height:DOT_ROW_H,alignItems:"center"}}>
@@ -810,6 +930,8 @@ function BaseballTracker() {
                       })}
                     </div>
                   </div>
+
+                  {/* legend footer */}
                   <div style={{borderTop:"1px solid rgba(255,255,255,0.05)",paddingTop:8,display:"flex",flexWrap:"wrap",gap:"6px 16px"}}>
                     <div style={{display:"flex",alignItems:"center",gap:5,fontSize:9,color:"#64748b"}}>
                       <div style={{display:"flex",gap:2}}>
@@ -828,6 +950,7 @@ function BaseballTracker() {
                 </div>
               );
             })()}
+
             {/* ── Latest entry card ── */}
             <div style={S.card}>
               <div style={S.secTitle}>最新の記録</div>
@@ -854,6 +977,7 @@ function BaseballTracker() {
             </div>
           </div>
         )}
+
         {/* ══ LOG ══ */}
         {view === "log" && (
           <div>
@@ -878,6 +1002,7 @@ function BaseballTracker() {
                 }} onClick={() => setFilterCat(c)}>{c}</button>
               ))}
             </div>
+
             {sortedEntries.map(entry => (
               <div key={entry.id}
                 style={{
@@ -911,6 +1036,7 @@ function BaseballTracker() {
                 </div>
                 <div style={{ marginTop: 8, fontSize: 13, color: "#cbd5e1", lineHeight: 1.7 }}>{entry.summary}</div>
                 <DrillBreakdown drillLog={entry.drillLog} />
+
                 {selectedEntry?.id === entry.id && (
                   <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)", animation: "fadeIn 0.25s ease" }}>
                     {Object.entries(entry.drillLog || {}).map(([cat, drills]) => (
@@ -953,6 +1079,7 @@ function BaseballTracker() {
             )}
           </div>
         )}
+
         {/* ══ ANALYSIS ══ */}
         {view === "analysis" && (
           <div>
@@ -960,6 +1087,8 @@ function BaseballTracker() {
               <div style={{ fontFamily: "'Oswald', sans-serif", fontSize: 22, letterSpacing: 1, lineHeight:1 }}>P — ANALYSIS</div>
               <div style={{ fontSize:11, color:"#475569", marginTop:4 }}>練習データの分析レポート</div>
             </div>
+
+            {/* Condition dist */}
             <div style={S.card}>
               <div style={S.secTitle}>コンディション分布</div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -980,6 +1109,8 @@ function BaseballTracker() {
                 })}
               </div>
             </div>
+
+            {/* Category bars */}
             <div style={S.card}>
               <div style={S.secTitle}>カテゴリ別 練習量・頻度</div>
               {getCatStats().map(({ cat, count, totalMins, avgCond }) => {
@@ -1001,6 +1132,8 @@ function BaseballTracker() {
                 );
               })}
             </div>
+
+            {/* Top drills */}
             <div style={S.card}>
               <div style={S.secTitle}>練習内容 TOP10（累積時間）</div>
               {getDrillStats().map((d, i) => {
@@ -1022,6 +1155,8 @@ function BaseballTracker() {
               })}
               {!getDrillStats().length && <div style={{ color: "#475569", fontSize: 12 }}>データがありません</div>}
             </div>
+
+            {/* Weight trend full */}
             <div style={S.card}>
               <div style={S.secTitle}>体重推移</div>
               {wEntries.length > 1 ? (
@@ -1050,6 +1185,8 @@ function BaseballTracker() {
                 </>
               ) : <div style={{ color: "#475569", fontSize: 12 }}>体重データが2件以上あると表示されます</div>}
             </div>
+
+            {/* Tags */}
             <div style={S.card}>
               <div style={S.secTitle}>よく使うタグ</div>
               {(() => {
@@ -1074,6 +1211,7 @@ function BaseballTracker() {
             </div>
           </div>
         )}
+
         {/* ══ INPUT FORM ══ */}
         {view === "input" && (
           <div>
@@ -1082,6 +1220,8 @@ function BaseballTracker() {
               <div style={{ fontSize:11, color:"#475569", marginTop:4 }}>練習記録の入力フォーム</div>
             </div>
             <div style={S.card}>
+
+              {/* 基本情報 row */}
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 22 }}>
                 <div style={{ flex: 2, minWidth: 150 }}>
                   <label style={S.lbl}>日付</label>
@@ -1104,6 +1244,8 @@ function BaseballTracker() {
                     onChange={e => setForm(f => ({ ...f, sleepHours: e.target.value }))} style={S.inp} />
                 </div>
               </div>
+
+              {/* パフォーマンス計測 */}
               <div style={{ marginBottom: 22 }}>
                 <label style={S.lbl}>パフォーマンス計測（記録した日のみ入力）</label>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -1133,6 +1275,8 @@ function BaseballTracker() {
                   </div>
                 </div>
               </div>
+
+              {/* コンディション */}
               <div style={{ marginBottom: 22 }}>
                 <label style={S.lbl}>コンディション</label>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -1154,6 +1298,8 @@ function BaseballTracker() {
                   ))}
                 </div>
               </div>
+
+              {/* カテゴリ & ドリル */}
               <div style={{ marginBottom: 22 }}>
                 <label style={S.lbl}>練習カテゴリ ＆ メニュー（複数選択可）</label>
                 {CATEGORIES.map(cat => {
@@ -1183,6 +1329,7 @@ function BaseballTracker() {
                           </span>
                         )}
                       </button>
+
                       {isSel && (
                         <div style={{
                           marginTop: 8, padding: "14px 14px",
@@ -1254,6 +1401,8 @@ function BaseballTracker() {
                   </div>
                 )}
               </div>
+
+              {/* 感覚スコア */}
               <div style={{ marginBottom: 20 }}>
                 <label style={S.lbl}>体の感覚スコア（1〜5）</label>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -1267,6 +1416,8 @@ function BaseballTracker() {
                   ))}
                 </div>
               </div>
+
+              {/* まとめ */}
               <div style={{ marginBottom: 16 }}>
                 <label style={S.lbl}>今日のまとめ・感想</label>
                 <textarea value={form.summary} rows={3}
@@ -1274,6 +1425,8 @@ function BaseballTracker() {
                   placeholder="今日の練習でよかった点、改善点など..."
                   style={{ ...S.inp, resize: "vertical", lineHeight: 1.7 }} />
               </div>
+
+              {/* 詳細 */}
               <div style={{ marginBottom: 16 }}>
                 <label style={S.lbl}>練習詳細（球数・本数・タイムなど）</label>
                 <textarea value={form.details} rows={2}
@@ -1281,6 +1434,8 @@ function BaseballTracker() {
                   placeholder="具体的な数値データを記録..."
                   style={{ ...S.inp, resize: "vertical", lineHeight: 1.7 }} />
               </div>
+
+              {/* タグ */}
               <div style={{ marginBottom: 26 }}>
                 <label style={S.lbl}>タグ（カンマ・スペース区切り）</label>
                 <input type="text" value={form.tags}
@@ -1288,6 +1443,8 @@ function BaseballTracker() {
                   placeholder="例: ブルペン, 変化球, 守備連携"
                   style={S.inp} />
               </div>
+
+              {/* Submit */}
               <div style={{ display: "flex", gap: 12 }}>
                 <button onClick={handleSubmit} style={{
                   flex: 1, padding: "14px 0", borderRadius: 12, border: "none",
@@ -1304,6 +1461,7 @@ function BaseballTracker() {
             </div>
           </div>
         )}
+
         {/* ══════════════════════════════════════
             GAME DASHBOARD
         ══════════════════════════════════════ */}
@@ -1313,6 +1471,8 @@ function BaseballTracker() {
           const losses = games.filter(g => g.result === "loss").length;
           const draws  = games.filter(g => g.result === "draw").length;
           const total  = games.length;
+
+          // Batting cumulative
           const batGames = games.filter(g => g.batting?.ab != null);
           const totalAB  = batGames.reduce((s,g) => s + (g.batting.ab||0), 0);
           const totalH   = batGames.reduce((s,g) => s + (g.batting.hits||0), 0);
@@ -1321,11 +1481,15 @@ function BaseballTracker() {
           const totalBB  = batGames.reduce((s,g) => s + (g.batting.bb||0), 0);
           const avg = totalAB > 0 ? (totalH / totalAB).toFixed(3).replace("0.","."): ".---";
           const obp = (totalAB + totalBB) > 0 ? ((totalH + totalBB) / (totalAB + totalBB)).toFixed(3).replace("0.",".") : ".---";
+
+          // Baserunning cumulative
           const brGames   = games.filter(g => g.baserunning);
           const totalScored = brGames.reduce((s,g) => s + (g.baserunning.scored||0), 0);
           const totalSB   = brGames.reduce((s,g) => s + (g.baserunning.sb||0), 0);
           const totalCS   = brGames.reduce((s,g) => s + (g.baserunning.cs||0), 0);
           const sbPct     = (totalSB + totalCS) > 0 ? (totalSB / (totalSB + totalCS) * 100).toFixed(0) : "—";
+
+          // Pitching cumulative
           const pitGames  = games.filter(g => g.pitching?.pitches != null);
           const totalIP   = pitGames.reduce((s,g) => { const p = parseFloat(g.pitching.innings||0); return s + Math.floor(p) + (p%1)*10/3; }, 0);
           const totalPitH = pitGames.reduce((s,g) => s + (g.pitching.hits||0), 0);
@@ -1334,7 +1498,10 @@ function BaseballTracker() {
           const totalPitBB= pitGames.reduce((s,g) => s + (g.pitching.bb||0), 0);
           const era = totalIP > 0 ? (totalER / totalIP * 9).toFixed(2) : "—";
           const whip = totalIP > 0 ? ((totalPitH + totalPitBB) / totalIP).toFixed(2) : "—";
+
+          // Trend data (chronological)
           const chronoGames = [...games].sort((a,b) => a.date.localeCompare(b.date));
+
           const PCard = ({label, value, sub, color}) => (
             <div style={{ flex:1, minWidth:100, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"14px 16px", position:"relative", overflow:"hidden" }}>
               <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:color, borderRadius:"14px 14px 0 0" }} />
@@ -1343,12 +1510,15 @@ function BaseballTracker() {
               {sub && <div style={{ fontSize:9, color:"#475569", marginTop:4 }}>{sub}</div>}
             </div>
           );
+
           return (
             <div>
               <div style={{ marginBottom:20 }}>
               <div style={{ fontFamily:"'Oswald', sans-serif", fontSize:22, letterSpacing:1, lineHeight:1 }}>G — GAME DB</div>
               <div style={{ fontSize:11, color:"#475569", marginTop:4 }}>試合成績のダッシュボード</div>
             </div>
+
+              {/* 戦績 */}
               <div style={S.card}>
                 <div style={S.secTitle}>通算成績</div>
                 <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:16 }}>
@@ -1377,6 +1547,7 @@ function BaseballTracker() {
                       </>}
                     </div>
                   </div>
+                  {/* Win rate bar */}
                   <div style={{ flex:2, minWidth:160 }}>
                     <div style={{ fontSize:11, color:"#64748b", marginBottom:8 }}>勝率</div>
                     <div style={{ fontSize:26, fontFamily:"'Oswald', sans-serif", color:"#f1f5f9", marginBottom:6 }}>
@@ -1388,6 +1559,8 @@ function BaseballTracker() {
                   </div>
                 </div>
               </div>
+
+              {/* Batting stats */}
               {batGames.length > 0 && (
                 <div style={S.card}>
                   <div style={S.secTitle}>打撃成績（通算）</div>
@@ -1399,6 +1572,8 @@ function BaseballTracker() {
                   </div>
                 </div>
               )}
+
+              {/* Baserunning stats */}
               {brGames.length > 0 && (
                 <div style={S.card}>
                   <div style={S.secTitle}>走塁成績（通算）</div>
@@ -1410,6 +1585,8 @@ function BaseballTracker() {
                   </div>
                 </div>
               )}
+
+              {/* Pitching stats */}
               {pitGames.length > 0 && (
                 <div style={S.card}>
                   <div style={S.secTitle}>投球成績（通算）</div>
@@ -1422,10 +1599,15 @@ function BaseballTracker() {
                   </div>
                 </div>
               )}
+
+              {/* ── Trend graphs ── */}
               {chronoGames.length >= 2 && (
                 <div style={S.card}>
                   <div style={S.secTitle}>成績推移グラフ</div>
+
+                  {/* Batting avg trend */}
                   {batGames.length >= 2 && (() => {
+                    // cumulative avg per game
                     let cumAB = 0, cumH = 0;
                     const avgTrend = chronoGames
                       .filter(g => g.batting?.ab != null)
@@ -1443,16 +1625,18 @@ function BaseballTracker() {
                         <div style={{ position:"relative", height: H + 20 }}>
                           <svg width="100%" height={H} style={{ display:"block", overflow:"visible" }}>
                             <line x1="0" x2="100%" y1={H} y2={H} stroke="rgba(255,255,255,0.06)" strokeWidth="1"/>
+                            {/* game avg bars */}
                             {avgTrend.map((p,i) => {
                               const bh = (p.gameAvg / maxV) * (H - 8);
                               return (
                                 <rect key={i}
                                   x={`${i*bw + bw*0.15}%`} y={H - bh} width={`${bw*0.7}%`} height={bh}
                                   fill="#f59e0b" opacity="0.3" rx="2">
-                                  <title>{`${p.date}: ${(p.gameAvg).toFixed(3).replace("0.",".")}`}</title>
+                                  <title>{`${p.date}: ${(p.gameAvg).toFixed(3).replace("0.",".")} (${chronoGames.filter(g=>g.batting?.ab!=null)[i]?.batting.hits}/${chronoGames.filter(g=>g.batting?.ab!=null)[i]?.batting.ab})`}</title>
                                 </rect>
                               );
                             })}
+                            {/* cumulative avg line */}
                             <polyline
                               points={avgTrend.map((p,i) => `${i*bw+bw*0.5}%,${H - (p.val/maxV)*(H-8)}`).join(" ")}
                               fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -1480,6 +1664,8 @@ function BaseballTracker() {
                       </div>
                     );
                   })()}
+
+                  {/* ERA trend */}
                   {pitGames.length >= 2 && (() => {
                     let cumIP = 0, cumER = 0;
                     const eraTrend = chronoGames
@@ -1541,6 +1727,8 @@ function BaseballTracker() {
                   })()}
                 </div>
               )}
+
+              {/* Recent games */}
               <div style={S.card}>
                 <div style={S.secTitle}>直近の試合</div>
                 {sortedGames.slice(0, 5).map(g => (
@@ -1580,6 +1768,7 @@ function BaseballTracker() {
             </div>
           );
         })()}
+
         {/* ══════════════════════════════════════
             GAME LOG
         ══════════════════════════════════════ */}
@@ -1598,6 +1787,7 @@ function BaseballTracker() {
                 }}
                 onClick={() => setSelectedGame(selectedGame?.id === g.id ? null : g)}
               >
+                {/* Header */}
                 <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
                   <div style={{
                     width:36, height:36, borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center",
@@ -1633,9 +1823,13 @@ function BaseballTracker() {
                     )}
                   </div>
                 </div>
+
+                {/* Expanded */}
                 {selectedGame?.id === g.id && (
                   <div style={{ marginTop:14, paddingTop:14, borderTop:"1px solid rgba(255,255,255,0.06)", animation:"fadeIn 0.25s ease" }}>
                     <div style={{ display:"flex", gap:16, flexWrap:"wrap" }}>
+
+                      {/* Batting detail */}
                       {g.batting?.ab != null && (
                         <div style={{ flex:1, minWidth:200 }}>
                           <div style={{ fontSize:10, color:"#f59e0b", fontFamily:"'Oswald', sans-serif", letterSpacing:1, marginBottom:8 }}>BATTING</div>
@@ -1650,6 +1844,8 @@ function BaseballTracker() {
                           </div>
                         </div>
                       )}
+
+                      {/* Pitching detail */}
                       {g.pitching?.innings && (
                         <div style={{ flex:1, minWidth:200 }}>
                           <div style={{ fontSize:10, color:"#06b6d4", fontFamily:"'Oswald', sans-serif", letterSpacing:1, marginBottom:8 }}>PITCHING</div>
@@ -1665,6 +1861,8 @@ function BaseballTracker() {
                         </div>
                       )}
                     </div>
+
+                    
                     {g.baserunning && (
                       <div style={{ marginTop:12 }}>
                         <div style={{ fontSize:10, color:"#22c55e", fontFamily:"'Oswald', sans-serif", letterSpacing:1, marginBottom:6 }}>BASERUNNING</div>
@@ -1677,6 +1875,7 @@ function BaseballTracker() {
                         </div>
                       </div>
                     )}
+
                     {g.memo && (
                       <div style={{ marginTop:12, fontSize:12, color:"#94a3b8", lineHeight:1.8, borderTop:"1px solid rgba(255,255,255,0.05)", paddingTop:10 }}>
                         {g.memo}
@@ -1693,6 +1892,7 @@ function BaseballTracker() {
             )}
           </div>
         )}
+
         {/* ══════════════════════════════════════
             GAME INPUT FORM
         ══════════════════════════════════════ */}
@@ -1703,6 +1903,8 @@ function BaseballTracker() {
               <div style={{ fontSize:11, color:"#475569", marginTop:4 }}>試合記録の入力フォーム</div>
             </div>
             <div style={S.card}>
+
+              {/* 基本情報 */}
               <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:20 }}>
                 <div style={{ flex:2, minWidth:140 }}>
                   <label style={S.lbl}>日付</label>
@@ -1720,6 +1922,8 @@ function BaseballTracker() {
                     onChange={e => setGameForm(f=>({...f, venue:e.target.value}))} style={S.inp} />
                 </div>
               </div>
+
+              {/* スコア・結果 */}
               <div style={{ marginBottom:20 }}>
                 <label style={S.lbl}>スコア・結果</label>
                 <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
@@ -1744,6 +1948,8 @@ function BaseballTracker() {
                   </div>
                 </div>
               </div>
+
+              {/* Tab selector */}
               <div style={{ display:"flex", gap:8, marginBottom:16 }}>
                 {[["batting","打撃成績","#f59e0b"],["pitching","投球成績","#06b6d4"],["baserunning","走塁","#22c55e"]].map(([t,l,c])=>(
                   <button key={t} onClick={()=>setActiveTab(t)} style={{
@@ -1756,6 +1962,8 @@ function BaseballTracker() {
                   }}>{l}</button>
                 ))}
               </div>
+
+              {/* Batting tab */}
               {activeTab === "batting" && (
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(110px,1fr))", gap:12, marginBottom:20 }}>
                   {[["pa","打席"],["ab","打数"],["hits","安打"],["singles","単打"],["doubles","二塁打"],
@@ -1769,6 +1977,8 @@ function BaseballTracker() {
                   ))}
                 </div>
               )}
+
+              {/* Pitching tab */}
               {activeTab === "pitching" && (
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(110px,1fr))", gap:12, marginBottom:20 }}>
                   {[["innings","投球回"],["bf","打者数"],["pitches","球数"],["hits","被安打"],
@@ -1784,6 +1994,8 @@ function BaseballTracker() {
                   ))}
                 </div>
               )}
+
+              {/* Baserunning tab */}
               {activeTab === "baserunning" && (
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(110px,1fr))", gap:12, marginBottom:20 }}>
                   {[["scored","得点"],["sb","盗塁"],["cs","盗塁刺"]].map(([k,l])=>(
@@ -1796,6 +2008,8 @@ function BaseballTracker() {
                   ))}
                 </div>
               )}
+
+              {/* Memo */}
               <div style={{ marginBottom:24 }}>
                 <label style={S.lbl}>メモ・振り返り</label>
                 <textarea value={gameForm.memo} rows={3}
@@ -1803,6 +2017,8 @@ function BaseballTracker() {
                   placeholder="試合の感想、課題、よかった点など..."
                   style={{ ...S.inp, resize:"vertical", lineHeight:1.7 }} />
               </div>
+
+              {/* Submit */}
               <div style={{ display:"flex", gap:12 }}>
                 <button onClick={handleGameSubmit} style={{
                   flex:1, padding:"14px 0", borderRadius:12, border:"none",
@@ -1819,13 +2035,19 @@ function BaseballTracker() {
             </div>
           </div>
         )}
+
       </main>
+
+
     </div>
   );
 }
+
+
 function App() {
   return <BaseballTracker />;
 }
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
 </script>
